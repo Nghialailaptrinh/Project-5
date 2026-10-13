@@ -43,7 +43,7 @@ class PerceptronModel(Module):
 
         "*** YOUR CODE HERE ***"
 
-
+        self.w = Parameter(ones(1, dimensions))
 
 
     def get_weights(self):
@@ -64,7 +64,7 @@ class PerceptronModel(Module):
         """
         "*** YOUR CODE HERE ***"
 
-        
+        return x @ self.w.T
 
     def get_prediction(self, x):
         """
@@ -75,6 +75,11 @@ class PerceptronModel(Module):
         score = self(x)
 
         "*** YOUR CODE HERE ***"
+
+        if score.item() >= 0:
+            return 1
+        else:
+            return -1
 
 
 
