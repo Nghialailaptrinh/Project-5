@@ -8,6 +8,7 @@ Please avoid importing any other functions or modules.
 Your code will not pass if the gradescope autograder detects any changed imports
 """
 # import torch
+import torch
 from torch.nn import Parameter, Linear
 from torch import tensor, tensordot, ones, matmul, zeros 
 from torch.nn.functional import relu, softmax
@@ -43,6 +44,8 @@ class PerceptronModel(Module):
 
         "*** YOUR CODE HERE ***"
 
+        self.w = torch.nn.Parameter(torch.ones(1, dimensions)) 
+
 
     def get_weights(self):
         """
@@ -62,8 +65,8 @@ class PerceptronModel(Module):
         """
         "*** YOUR CODE HERE ***"
 
+        return x @ self.w.t()
         
-
     def get_prediction(self, x):
         """
         Calculates the predicted class for a single data point `x`.
@@ -74,7 +77,10 @@ class PerceptronModel(Module):
 
         "*** YOUR CODE HERE ***"
 
-
+        if score >= 0:
+            return 1
+        else:
+            return -1
 
 class RegressionModel(Module):
     """
