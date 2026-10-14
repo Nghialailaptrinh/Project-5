@@ -30,7 +30,17 @@ def train_perceptron(model, dataset):
     """
     with no_grad():
         dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
-        "*** YOUR CODE HERE ***"
+        mistakes = 1
+        while mistakes:
+            mistakes = 0
+            for batch in dataloader:
+                x = batch['x']
+                label = batch['label']
+                prediction = model.get_prediction(x)
+                actual = label.item()
+                if prediction != actual:
+                    mistakes += 1
+                    model.w += label * x
 
 
 def train_regression(model, dataset):
