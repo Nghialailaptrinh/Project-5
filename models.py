@@ -1,7 +1,6 @@
 from torch import stack, tril
 from torch.nn import Module
 
-
 """
 Functions you should use.
 Please avoid importing any other functions or modules.
@@ -9,7 +8,7 @@ Your code will not pass if the gradescope autograder detects any changed imports
 """
 # import torch
 from torch.nn import Parameter, Linear
-from torch import tensor, tensordot, ones, matmul, zeros 
+from torch import tensor, tensordot, ones, matmul, zeros
 from torch.nn.functional import relu, softmax
 from torch import movedim
 
@@ -42,7 +41,7 @@ class PerceptronModel(Module):
         super(PerceptronModel, self).__init__()
 
         "*** YOUR CODE HERE ***"
-
+        self.w = Parameter(ones(1, dimensions))
 
     def get_weights(self):
         """
@@ -61,8 +60,7 @@ class PerceptronModel(Module):
         The pytorch function `tensordot` may be helpful here.
         """
         "*** YOUR CODE HERE ***"
-
-        
+        return (x @ self.w.T).reshape(1)
 
     def get_prediction(self, x):
         """
@@ -73,7 +71,7 @@ class PerceptronModel(Module):
         score = self(x)
 
         "*** YOUR CODE HERE ***"
-
+        return 1 if score.item() >= 0 else -1
 
 
 class RegressionModel(Module):
@@ -87,7 +85,6 @@ class RegressionModel(Module):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
         super().__init__()
-   
 
     def forward(self, x):
         """
@@ -123,7 +120,6 @@ class DigitClassificationModel(Module):
         output_size = 10
         "*** YOUR CODE HERE ***"
 
-
     def forward(self, x):
         """
         Runs the model for a batch of examples.
@@ -139,7 +135,6 @@ class DigitClassificationModel(Module):
                 (also called logits)
         """
         """ YOUR CODE HERE """
-
 
 
 class LanguageIDModel(Module):
@@ -161,8 +156,6 @@ class LanguageIDModel(Module):
         super(LanguageIDModel, self).__init__()
         "*** YOUR CODE HERE ***"
         # Initialize your model parameters here
-
-
 
     def forward(self, xs):
         """
@@ -194,7 +187,6 @@ class LanguageIDModel(Module):
                 (also called logits)
         """
         "*** YOUR CODE HERE ***"
-
 
 
 def Convolve(input: tensor, weight: tensor):
@@ -241,7 +233,6 @@ class DigitConvolutionalModel(Module):
 
         self.convolution_weights = Parameter(ones((3, 3)))
         """ YOUR CODE HERE """
-
 
     def forward(self, x):
         """
@@ -293,4 +284,3 @@ class Attention(Module):
         B, T, C = input.size()
 
         """YOUR CODE HERE"""
-
