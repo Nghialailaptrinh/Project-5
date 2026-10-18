@@ -60,7 +60,6 @@ class PerceptronModel(Module):
             x: a node with shape (dimensions)
         Returns: a node containing a single number (the score)
 
-        The pytorch function `tensordot` may be helpful here.
         """
         "*** YOUR CODE HERE ***"
 
@@ -91,9 +90,11 @@ class RegressionModel(Module):
     """
 
     def __init__(self):
-        # Initialize your model parameters here
-        "*** YOUR CODE HERE ***"
         super().__init__()
+
+        self.linear1 = Linear(1, 64)
+        self.linear2 = Linear(64, 64)
+        self.linear3 = Linear(64, 1)
    
 
     def forward(self, x):
@@ -106,6 +107,12 @@ class RegressionModel(Module):
             A node with shape (batch_size x 1) containing predicted y-values
         """
         "*** YOUR CODE HERE ***"
+
+        hidden1 = relu(self.linear1(x))
+        hidden2 = relu(self.linear2(hidden1))
+        prediction = self.linear3(hidden2)
+
+        return prediction
 
 
 class DigitClassificationModel(Module):
@@ -184,7 +191,7 @@ class LanguageIDModel(Module):
         have a batch of 8 three-letter words where the last word is "cat", then
         xs[1] will be a tensor that contains a 1 at position (7, 0). Here the
         index 7 reflects the fact that "cat" is the last word in the batch, and
-        the index 0 reflects the fact that the letter "a" is the inital (0th)
+        the index 0 reflects the fact that the letter "a" is the initial (0th)
         letter of our combined alphabet for this task.
 
         Your model should use a Recurrent Neural Network to summarize the list
@@ -210,7 +217,6 @@ def Convolve(input: tensor, weight: tensor):
     DO NOT import any pytorch methods to directly do this, the convolution must be done with only the functions
     already imported.
 
-    There are multiple ways to complete this function. One possible solution would be to use 'tensordot'.
     If you would like to index a tensor, you can do it as such:
 
     tensor[y:y+height, x:x+width]
@@ -232,10 +238,6 @@ def Convolve(input: tensor, weight: tensor):
 class DigitConvolutionalModel(Module):
     """
     A model for handwritten digit classification using the MNIST dataset.
-
-    This class is a convolutational model which has already been trained on MNIST.
-    if Convolve() has been correctly implemented, this model should be able to achieve a high accuracy
-    on the mnist dataset given the pretrained weights.
 
     Note that this class looks different from a standard pytorch model since we don't need to train it
     as it will be run on preset weights.

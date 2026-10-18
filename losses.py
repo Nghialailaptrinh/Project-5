@@ -12,6 +12,8 @@ def regression_loss(y_pred, y):
     """
     "*** YOUR CODE HERE ***"
 
+    return mse_loss(y_pred, y).reshape(1)
+
 
 
 def digitclassifier_loss(y_pred, y):
