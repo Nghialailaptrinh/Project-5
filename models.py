@@ -40,13 +40,8 @@ class PerceptronModel(Module):
         """
         super(PerceptronModel, self).__init__()
 
-<<<<<<< HEAD
-        "*** YOUR CODE HERE ***"
-        self.w = Parameter(ones(1, dimensions))
-=======
         self.w = Parameter(ones(1, dimensions))
 
->>>>>>> 1f7b53da70f3d26951dbfdcb5c8c666d821c2bd0
 
     def get_weights(self):
         """
@@ -64,14 +59,9 @@ class PerceptronModel(Module):
 
         The pytorch function `tensordot` may be helpful here.
         """
-<<<<<<< HEAD
-        "*** YOUR CODE HERE ***"
-        return (x @ self.w.T).reshape(1)
-=======
         return self.w @ x.T
 
         
->>>>>>> 1f7b53da70f3d26951dbfdcb5c8c666d821c2bd0
 
     def get_prediction(self, x):
         """
@@ -81,13 +71,8 @@ class PerceptronModel(Module):
         """
         score = self(x)
 
-<<<<<<< HEAD
-        "*** YOUR CODE HERE ***"
-        return 1 if score.item() >= 0 else -1
-=======
         return 1 if score.item() >= 0 else -1
 
->>>>>>> 1f7b53da70f3d26951dbfdcb5c8c666d821c2bd0
 
 
 class RegressionModel(Module):
