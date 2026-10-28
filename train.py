@@ -1,3 +1,6 @@
+import copy
+
+import torch
 from torch import no_grad
 from torch.utils.data import DataLoader
 
@@ -141,24 +144,69 @@ def train_digitclassifier(model, dataset):
         if validation_accuracy >= target_accuracy:
             break
 
-
 def train_languageid(model, dataset):
     """
-    Trains the model.
-
-    Note that when you iterate through dataloader, each batch will returned as its own vector in the form
-    (batch_size x length of word x self.num_chars). However, in order to run multiple samples at the same time,
-    get_loss() and run() expect each batch to be in the form (length of word x batch_size x self.num_chars), meaning
-    that you need to switch the first two dimensions of every batch. This can be done with the movedim() function 
-    as follows:
-
-    movedim(input_vector, initial_dimension_position, final_dimension_position)
-
-    For more information, look at the pytorch documentation of torch.movedim()
+    Trains the language identification model.
     """
-    model.train()
-    "*** YOUR CODE HERE ***"
 
+    dataloader = DataLoader(
+        dataset,
+        batch_size=64,
+        shuffle=True
+    )
+
+    optimizer = optim.Adam(
+        model.parameters(),
+        lr=0.0005
+    )
+
+    max_epochs = 40
+    target_accuracy = 0.81
+
+    best_accuracy = 0.0
+    best_state = None
+
+    for epoch in range(max_epochs):
+        model.train()
+        total_loss = 0.0
+
+        for batch in dataloader:
+            x = batch["x"]
+            x = x.movedim(1, 0)  # (batch, sequence, chars) -> (sequence, batch, chars)
+            y = batch["label"]
+
+            optimizer.zero_grad()
+            logits = model(x)
+            loss = languageid_loss(logits, y)
+            loss.backward()
+            optimizer.step()
+
+            total_loss += loss.item()
+
+        model.eval()
+        with torch.no_grad():
+            validation_accuracy = dataset.get_validation_accuracy()
+
+        print(
+            f"Epoch {epoch + 1}: "
+            f"loss={total_loss / len(dataloader):.4f}, "
+            f"validation={validation_accuracy:.4f}"
+        )
+
+        if validation_accuracy > best_accuracy:
+            best_accuracy = validation_accuracy
+            best_state = {
+                name: param.detach().clone()
+                for name, param in model.state_dict().items()
+            }
+
+        if validation_accuracy >= target_accuracy:
+            break
+
+    if best_state is not None:
+        model.load_state_dict(best_state)
+
+    print(f"Best validation accuracy: {best_accuracy:.2%}")
 
 
 def Train_DigitConvolution(model, dataset):
