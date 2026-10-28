@@ -131,29 +131,18 @@ class DigitClassificationModel(Module):
     """
 
     def __init__(self):
-        # Initialize your model parameters here
         super().__init__()
-        input_size = 28 * 28
-        output_size = 10
-        "*** YOUR CODE HERE ***"
 
+        self.linear1 = Linear(784, 256)
+        self.linear2 = Linear(256, 128)
+        self.linear3 = Linear(128, 10)
 
     def forward(self, x):
-        """
-        Runs the model for a batch of examples.
+        hidden1 = relu(self.linear1(x))
+        hidden2 = relu(self.linear2(hidden1))
+        logits = self.linear3(hidden2)
 
-        Your model should predict a node with shape (batch_size x 10),
-        containing scores. Higher scores correspond to greater probability of
-        the image belonging to a particular class.
-
-        Inputs:
-            x: a tensor with shape (batch_size x 784)
-        Output:
-            A node with shape (batch_size x 10) containing predicted scores
-                (also called logits)
-        """
-        """ YOUR CODE HERE """
-
+        return logits
 
 
 class LanguageIDModel(Module):
