@@ -171,6 +171,54 @@ def train_languageid(model, dataset):
     """
     model.train()
     "*** YOUR CODE HERE ***"
+    dataloader = DataLoader(
+        dataset,
+        batch_size=64,
+        shuffle=True
+    )
+
+    optimizer = optim.Adam(
+        model.parameters(),
+        lr=0.001
+    )
+
+    max_epochs = 35
+    target_accuracy = 0.88
+
+    for epoch in range(max_epochs):
+        model.train()
+
+        total_loss = 0.0
+
+        for batch in dataloader:
+            x = batch["x"].movedim(1, 0)
+            y = batch["label"]
+
+            optimizer.zero_grad()
+
+            logits = model(x)
+            loss = languageid_loss(logits, y)
+
+            loss.backward()
+            optimizer.step()
+
+            total_loss += loss.item()
+
+        average_loss = total_loss / len(dataloader)
+
+        model.eval()
+       
+        validation_accuracy = dataset.get_validation_accuracy()
+
+        print(
+            f"Epoch {epoch + 1}: "
+            f"loss={average_loss:.4f}, "
+            f"validation={validation_accuracy:.4f}"
+        )
+
+        if validation_accuracy >= target_accuracy:
+            break
+
 
 
 

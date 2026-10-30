@@ -174,16 +174,27 @@ class LanguageIDModel(Module):
     """
 
     def __init__(self):
-        # Our dataset contains words from five different languages, and the
-        # combined alphabets of the five languages contain a total of 47 unique
-        # characters.
-        # You can refer to self.num_chars or len(self.languages) in your code
-        self.num_chars = 47
-        self.languages = ["English", "Spanish", "Finnish", "Dutch", "Polish"]
-        super(LanguageIDModel, self).__init__()
-        "*** YOUR CODE HERE ***"
-        # Initialize your model parameters here
+        super().__init__()
 
+        self.num_chars = 47
+        self.num_languages = 5
+        self.hidden_size = 256
+
+        self.input_layer = Linear(
+            self.num_chars,
+            self.hidden_size
+        )
+
+        self.hidden_layer = Linear(
+            self.hidden_size,
+            self.hidden_size,
+            bias=False
+        )
+
+        self.output_layer = Linear(
+            self.hidden_size,
+            self.num_languages
+        )
 
 
     def forward(self, xs):
@@ -216,6 +227,16 @@ class LanguageIDModel(Module):
                 (also called logits)
         """
         "*** YOUR CODE HERE ***"
+        batch_size = xs[0].shape[0]
+        hidden = zeros(batch_size, self.hidden_size)
+
+        for char in xs:
+            char_features = self.input_layer(char)
+            hidden = relu(char_features + self.hidden_layer(hidden))
+
+        logits = self.output_layer(hidden)
+        return logits
+
 
 
 
