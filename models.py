@@ -124,6 +124,9 @@ class DigitClassificationModel(Module):
         input_size = 28 * 28
         output_size = 10
         "*** YOUR CODE HERE ***"
+        self.linear1 = Linear(784, 256)
+        self.linear2 = Linear(256, 128)
+        self.linear3 = Linear(128, 10)
 
     def forward(self, x):
         """
@@ -139,7 +142,11 @@ class DigitClassificationModel(Module):
             A node with shape (batch_size x 10) containing predicted scores
                 (also called logits)
         """
-        """ YOUR CODE HERE """
+        hidden1 = relu(self.linear1(x))
+        hidden2 = relu(self.linear2(hidden1))
+        logits = self.linear3(hidden2)
+
+        return logits
 
 
 class LanguageIDModel(Module):
@@ -158,9 +165,25 @@ class LanguageIDModel(Module):
         # You can refer to self.num_chars or len(self.languages) in your code
         self.num_chars = 47
         self.languages = ["English", "Spanish", "Finnish", "Dutch", "Polish"]
-        super(LanguageIDModel, self).__init__()
-        "*** YOUR CODE HERE ***"
-        # Initialize your model parameters here
+        super().__init__()
+
+        self.hidden_size = 256
+
+        self.input_layer = Linear(
+            self.num_chars,
+            self.hidden_size
+        )
+
+        self.hidden_layer = Linear(
+            self.hidden_size,
+            self.hidden_size,
+            bias=False
+        )
+
+        self.output_layer = Linear(
+            self.hidden_size,
+            len(self.languages)
+        )
 
     def forward(self, xs):
         """
@@ -192,6 +215,16 @@ class LanguageIDModel(Module):
                 (also called logits)
         """
         "*** YOUR CODE HERE ***"
+        batch_size = xs[0].shape[0]
+
+        hidden = zeros(batch_size, self.hidden_size)
+
+        for char in xs:
+            char_features = self.input_layer(char)
+            hidden = relu(char_features + self.hidden_layer(hidden))
+
+        logits = self.output_layer(hidden)
+        return logits
 
 
 def Convolve(input: tensor, weight: tensor):
