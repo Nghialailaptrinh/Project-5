@@ -91,25 +91,69 @@ def train_digitclassifier(model, dataset):
     Trains the model.
     """
     model.train()
-    """ YOUR CODE HERE """
+    dataloader = DataLoader(
+        dataset,
+        batch_size=100,
+        shuffle=True
+    )
+
+    optimizer = optim.Adam(
+        model.parameters(),
+        lr=0.001
+    )
+
+    num_epochs = 30
+
+    for epoch in range(num_epochs):
+
+        model.train()
+
+        for batch in dataloader:
+
+            x = batch["x"]
+            y = batch["label"]
+
+            optimizer.zero_grad()
+
+            logits = model(x)
+
+            loss = digitclassifier_loss(logits, y)
+
+            loss.backward()
+
+            optimizer.step()
+    
 
 
 def train_languageid(model, dataset):
-    """
-    Trains the model.
+    dataloader = DataLoader(dataset, batch_size=100, shuffle=True)
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    Note that when you iterate through dataloader, each batch will returned as its own vector in the form
-    (batch_size x length of word x self.num_chars). However, in order to run multiple samples at the same time,
-    get_loss() and run() expect each batch to be in the form (length of word x batch_size x self.num_chars), meaning
-    that you need to switch the first two dimensions of every batch. This can be done with the movedim() function
-    as follows:
+    for epoch in range(30):
+        model.train()
+        total_loss = 0.0
 
-    movedim(input_vector, initial_dimension_position, final_dimension_position)
+        for batch in dataloader:
+            x = batch["x"].movedim(0, 1) 
+            y = batch["label"]
 
-    For more information, look at the pytorch documentation of torch.movedim()
-    """
-    model.train()
-    "*** YOUR CODE HERE ***"
+            optimizer.zero_grad()
+            y_pred = model(x)
+            loss = languageid_loss(y_pred, y)
+            loss.backward()
+            optimizer.step()
+
+            total_loss += loss.item()
+
+        average_loss = total_loss / len(dataloader)
+
+        model.eval()
+        with no_grad():
+            validation_accuracy = dataset.get_validation_accuracy()
+
+        print(f"epoch {epoch + 1}: loss {average_loss:.4f}, val acc {validation_accuracy:.3f}")
+        if validation_accuracy >= 0.85:
+            break
 
 
 def Train_DigitConvolution(model, dataset):

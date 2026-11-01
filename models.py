@@ -125,23 +125,17 @@ class DigitClassificationModel(Module):
         super().__init__()
         input_size = 28 * 28
         output_size = 10
-        "*** YOUR CODE HERE ***"
+        self.linear1 = Linear(input_size, 256)
+        self.linear2 = Linear(256, 128)
+        self.linear3 = Linear(128, output_size)
 
     def forward(self, x):
-        """
-        Runs the model for a batch of examples.
+        
+        hidden1 = relu(self.linear1(x))
+        hidden2 = relu(self.linear2(hidden1))
+        logits = self.linear3(hidden2)
 
-        Your model should predict a node with shape (batch_size x 10),
-        containing scores. Higher scores correspond to greater probability of
-        the image belonging to a particular class.
-
-        Inputs:
-            x: a tensor with shape (batch_size x 784)
-        Output:
-            A node with shape (batch_size x 10) containing predicted scores
-                (also called logits)
-        """
-        """ YOUR CODE HERE """
+        return logits
 
 
 class LanguageIDModel(Module):
@@ -161,7 +155,9 @@ class LanguageIDModel(Module):
         self.num_chars = 47
         self.languages = ["English", "Spanish", "Finnish", "Dutch", "Polish"]
         super(LanguageIDModel, self).__init__()
-        "*** YOUR CODE HERE ***"
+        self.input_layer = Linear(self.num_chars, 256)
+        self.hidden_layer = Linear(256, 256)
+        self.output_layer = Linear(256, len(self.languages))
         # Initialize your model parameters here
 
     def forward(self, xs):
@@ -193,7 +189,13 @@ class LanguageIDModel(Module):
             A node with shape (batch_size x 5) containing predicted scores
                 (also called logits)
         """
-        "*** YOUR CODE HERE ***"
+        h = relu(self.input_layer(xs[0]))
+    
+        for x in xs[1:]:
+            h = relu(self.input_layer(x) + relu(self.hidden_layer(h)))
+
+        return self.output_layer(h)
+
 
 
 def Convolve(input: tensor, weight: tensor):
