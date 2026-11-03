@@ -1,7 +1,6 @@
 from torch import stack, tril
 from torch.nn import Module
 
-
 """
 Functions you should use.
 Please avoid importing any other functions or modules.
@@ -9,7 +8,7 @@ Your code will not pass if the gradescope autograder detects any changed imports
 """
 # import torch
 from torch.nn import Parameter, Linear
-from torch import tensor, tensordot, ones, matmul, zeros 
+from torch import tensor, tensordot, ones, matmul, zeros
 from torch.nn.functional import relu, softmax
 from torch import movedim
 
@@ -42,9 +41,7 @@ class PerceptronModel(Module):
         super(PerceptronModel, self).__init__()
 
         "*** YOUR CODE HERE ***"
-
         self.w = Parameter(ones(1, dimensions))
-
 
     def get_weights(self):
         """
@@ -60,10 +57,10 @@ class PerceptronModel(Module):
             x: a node with shape (dimensions)
         Returns: a node containing a single number (the score)
 
+        The pytorch function `tensordot` may be helpful here.
         """
         "*** YOUR CODE HERE ***"
-
-        return x @ self.w.T
+        return (x @ self.w.T).reshape(1)
 
     def get_prediction(self, x):
         """
@@ -74,12 +71,7 @@ class PerceptronModel(Module):
         score = self(x)
 
         "*** YOUR CODE HERE ***"
-
-        if score.item() >= 0:
-            return 1
-        else:
-            return -1
-
+        return 1 if score.item() >= 0 else -1
 
 
 class RegressionModel(Module):
@@ -90,12 +82,12 @@ class RegressionModel(Module):
     """
 
     def __init__(self):
+        # Initialize your model parameters here
         super().__init__()
 
         self.linear1 = Linear(1, 64)
         self.linear2 = Linear(64, 64)
         self.linear3 = Linear(64, 1)
-   
 
     def forward(self, x):
         """
@@ -106,13 +98,9 @@ class RegressionModel(Module):
         Returns:
             A node with shape (batch_size x 1) containing predicted y-values
         """
-        "*** YOUR CODE HERE ***"
-
         hidden1 = relu(self.linear1(x))
         hidden2 = relu(self.linear2(hidden1))
-        prediction = self.linear3(hidden2)
-
-        return prediction
+        return self.linear3(hidden2)
 
 
 class DigitClassificationModel(Module):
@@ -131,13 +119,29 @@ class DigitClassificationModel(Module):
     """
 
     def __init__(self):
+        # Initialize your model parameters here
         super().__init__()
-
+        input_size = 28 * 28
+        output_size = 10
+        "*** YOUR CODE HERE ***"
         self.linear1 = Linear(784, 256)
         self.linear2 = Linear(256, 128)
         self.linear3 = Linear(128, 10)
 
     def forward(self, x):
+        """
+        Runs the model for a batch of examples.
+
+        Your model should predict a node with shape (batch_size x 10),
+        containing scores. Higher scores correspond to greater probability of
+        the image belonging to a particular class.
+
+        Inputs:
+            x: a tensor with shape (batch_size x 784)
+        Output:
+            A node with shape (batch_size x 10) containing predicted scores
+                (also called logits)
+        """
         hidden1 = relu(self.linear1(x))
         hidden2 = relu(self.linear2(hidden1))
         logits = self.linear3(hidden2)
@@ -155,11 +159,15 @@ class LanguageIDModel(Module):
     """
 
     def __init__(self):
+        # Our dataset contains words from five different languages, and the
+        # combined alphabets of the five languages contain a total of 47 unique
+        # characters.
+        # You can refer to self.num_chars or len(self.languages) in your code
+        self.num_chars = 47
+        self.languages = ["English", "Spanish", "Finnish", "Dutch", "Polish"]
         super().__init__()
 
-        self.num_chars = 47
-        self.num_languages = 5
-        self.hidden_size = 128
+        self.hidden_size = 256
 
         self.input_layer = Linear(
             self.num_chars,
@@ -174,23 +182,49 @@ class LanguageIDModel(Module):
 
         self.output_layer = Linear(
             self.hidden_size,
-            self.num_languages
+            len(self.languages)
         )
 
-
     def forward(self, xs):
-        # xs: (sequence_length, batch_size, num_chars)
-        hidden = None
+        """
+        Runs the model for a batch of examples.
+
+        Although words have different lengths, our data processing guarantees
+        that within a single batch, all words will be of the same length (L).
+
+        Here `xs` will be a list of length L. Each element of `xs` will be a
+        tensor with shape (batch_size x self.num_chars), where every row in the
+        array is a one-hot vector encoding of a character. For example, if we
+        have a batch of 8 three-letter words where the last word is "cat", then
+        xs[1] will be a tensor that contains a 1 at position (7, 0). Here the
+        index 7 reflects the fact that "cat" is the last word in the batch, and
+        the index 0 reflects the fact that the letter "a" is the inital (0th)
+        letter of our combined alphabet for this task.
+
+        Your model should use a Recurrent Neural Network to summarize the list
+        `xs` into a single tensor of shape (batch_size x hidden_size), for your
+        choice of hidden_size. It should then calculate a tensor of shape
+        (batch_size x 5) containing scores, where higher scores correspond to
+        greater probability of the word originating from a particular language.
+
+        Inputs:
+            xs: a list with L elements (one per character), where each element
+                is a node with shape (batch_size x self.num_chars)
+        Returns:
+            A node with shape (batch_size x 5) containing predicted scores
+                (also called logits)
+        """
+        "*** YOUR CODE HERE ***"
+        batch_size = xs[0].shape[0]
+
+        hidden = zeros(batch_size, self.hidden_size)
 
         for char in xs:
             char_features = self.input_layer(char)
+            hidden = relu(char_features + self.hidden_layer(hidden))
 
-            if hidden is None:
-                hidden = relu(char_features)
-            else:
-                hidden = relu(char_features + self.hidden_layer(hidden))
-
-        return self.output_layer(hidden)
+        logits = self.output_layer(hidden)
+        return logits
 
 
 def Convolve(input: tensor, weight: tensor):
@@ -199,6 +233,7 @@ def Convolve(input: tensor, weight: tensor):
     DO NOT import any pytorch methods to directly do this, the convolution must be done with only the functions
     already imported.
 
+    There are multiple ways to complete this function. One possible solution would be to use 'tensordot'.
     If you would like to index a tensor, you can do it as such:
 
     tensor[y:y+height, x:x+width]
@@ -221,6 +256,10 @@ class DigitConvolutionalModel(Module):
     """
     A model for handwritten digit classification using the MNIST dataset.
 
+    This class is a convolutational model which has already been trained on MNIST.
+    if Convolve() has been correctly implemented, this model should be able to achieve a high accuracy
+    on the mnist dataset given the pretrained weights.
+
     Note that this class looks different from a standard pytorch model since we don't need to train it
     as it will be run on preset weights.
     """
@@ -232,7 +271,6 @@ class DigitConvolutionalModel(Module):
 
         self.convolution_weights = Parameter(ones((3, 3)))
         """ YOUR CODE HERE """
-
 
     def forward(self, x):
         """
@@ -284,4 +322,3 @@ class Attention(Module):
         B, T, C = input.size()
 
         """YOUR CODE HERE"""
-

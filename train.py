@@ -1,9 +1,5 @@
-import copy
-
-import torch
 from torch import no_grad
 from torch.utils.data import DataLoader
-
 
 """
 Functions you should use.
@@ -11,9 +7,13 @@ Please avoid importing any other functions or modules.
 Your code will not pass if the gradescope autograder detects any changed imports
 """
 from torch import optim, tensor
-from losses import regression_loss, digitclassifier_loss, languageid_loss, digitconvolution_Loss
+from losses import (
+    regression_loss,
+    digitclassifier_loss,
+    languageid_loss,
+    digitconvolution_Loss,
+)
 from torch import movedim
-
 
 """
 ##################
@@ -25,7 +25,7 @@ from torch import movedim
 def train_perceptron(model, dataset):
     """
     Train the perceptron until convergence.
-    You can iterate through DataLoader in order to 
+    You can iterate through DataLoader in order to
     retrieve all the batches you need to train on.
 
     Each sample in the dataloader is in the form {'x': features, 'label': label} where label
@@ -34,13 +34,12 @@ def train_perceptron(model, dataset):
     with no_grad():
         dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
         "*** YOUR CODE HERE ***"
-
         while True:
             mistakes = 0
 
             for batch in dataloader:
-                x = batch['x'].squeeze(0)
-                y = batch['label'].item()
+                x = batch["x"]
+                y = batch["label"].item()
 
                 prediction = model.get_prediction(x)
 
@@ -51,23 +50,26 @@ def train_perceptron(model, dataset):
             if mistakes == 0:
                 break
 
+
 def train_regression(model, dataset):
     """
-    Trains the regression model.
+    Trains the model.
+
+    In order to create batches, create a DataLoader object and pass in `dataset` as well as your required
+    batch size. You can look at PerceptronModel as a guideline for how you should implement the DataLoader
+
+    Each sample in the dataloader object will be in the form {'x': features, 'label': label} where label
+    is the item we need to predict based off of its features.
+
+    Inputs:
+        model: Pytorch model to use
+        dataset: a PyTorch dataset object containing data to be trained on
+
     """
     model.train()
 
-    dataloader = DataLoader(
-        dataset,
-        batch_size=50,
-        shuffle=True
-    )
-
-    optimizer = optim.Adam(
-        model.parameters(),
-        lr=0.01
-    )
-
+    dataloader = DataLoader(dataset, batch_size=50, shuffle=True)
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
     max_epochs = 2000
 
     for epoch in range(max_epochs):
@@ -78,26 +80,24 @@ def train_regression(model, dataset):
             y = batch["label"]
 
             optimizer.zero_grad()
-
             prediction = model(x)
             loss = regression_loss(prediction, y)
-
             loss.backward()
             optimizer.step()
 
             total_loss += loss.item()
 
         average_loss = total_loss / len(dataloader)
-
         if average_loss <= 0.01:
             break
+
 
 def train_digitclassifier(model, dataset):
     """
     Trains the model.
     """
     model.train()
-
+    """ YOUR CODE HERE """
     dataloader = DataLoader(
         dataset,
         batch_size=100,
@@ -114,7 +114,6 @@ def train_digitclassifier(model, dataset):
 
     for epoch in range(max_epochs):
         model.train()
-
         total_loss = 0.0
 
         for batch in dataloader:
@@ -144,11 +143,23 @@ def train_digitclassifier(model, dataset):
         if validation_accuracy >= target_accuracy:
             break
 
+
 def train_languageid(model, dataset):
     """
-    Trains the language identification model.
-    """
+    Trains the model.
 
+    Note that when you iterate through dataloader, each batch will returned as its own vector in the form
+    (batch_size x length of word x self.num_chars). However, in order to run multiple samples at the same time,
+    get_loss() and run() expect each batch to be in the form (length of word x batch_size x self.num_chars), meaning
+    that you need to switch the first two dimensions of every batch. This can be done with the movedim() function
+    as follows:
+
+    movedim(input_vector, initial_dimension_position, final_dimension_position)
+
+    For more information, look at the pytorch documentation of torch.movedim()
+    """
+    model.train()
+    "*** YOUR CODE HERE ***"
     dataloader = DataLoader(
         dataset,
         batch_size=64,
@@ -157,56 +168,43 @@ def train_languageid(model, dataset):
 
     optimizer = optim.Adam(
         model.parameters(),
-        lr=0.0005
+        lr=0.001
     )
 
-    max_epochs = 40
-    target_accuracy = 0.81
-
-    best_accuracy = 0.0
-    best_state = None
+    max_epochs = 35
+    target_accuracy = 0.88
 
     for epoch in range(max_epochs):
         model.train()
         total_loss = 0.0
 
         for batch in dataloader:
-            x = batch["x"]
-            x = x.movedim(1, 0)  # (batch, sequence, chars) -> (sequence, batch, chars)
+            x = batch["x"].movedim(1, 0)
             y = batch["label"]
 
             optimizer.zero_grad()
+
             logits = model(x)
             loss = languageid_loss(logits, y)
+
             loss.backward()
             optimizer.step()
 
             total_loss += loss.item()
 
+        average_loss = total_loss / len(dataloader)
+
         model.eval()
-        with torch.no_grad():
-            validation_accuracy = dataset.get_validation_accuracy()
+        validation_accuracy = dataset.get_validation_accuracy()
 
         print(
             f"Epoch {epoch + 1}: "
-            f"loss={total_loss / len(dataloader):.4f}, "
+            f"loss={average_loss:.4f}, "
             f"validation={validation_accuracy:.4f}"
         )
 
-        if validation_accuracy > best_accuracy:
-            best_accuracy = validation_accuracy
-            best_state = {
-                name: param.detach().clone()
-                for name, param in model.state_dict().items()
-            }
-
         if validation_accuracy >= target_accuracy:
             break
-
-    if best_state is not None:
-        model.load_state_dict(best_state)
-
-    print(f"Best validation accuracy: {best_accuracy:.2%}")
 
 
 def Train_DigitConvolution(model, dataset):
