@@ -291,18 +291,17 @@ class Attention(Module):
         self.layer_size = layer_size
 
     def forward(self, input):
-        """
-        Applies the attention mechanism to input. All necessary layers have
-        been defined in __init__()
-
-        In order to apply the causal mask to a given matrix M, you should update
-        it as such:
-
-        M = M.masked_fill(self.mask[:,:,:T,:T] == 0, float('-inf'))[0]
-
-        For the softmax activation, it should be applied to the last dimension of the input,
-        Take a look at the "dim" argument of torch.nn.functional.softmax to figure out how to do this.
-        """
         B, T, C = input.size()
 
         """YOUR CODE HERE"""
+        q = self.q_layer(input)
+        k = self.k_layer(input)
+        v = self.v_layer(input)
+
+        scores = matmul(q, movedim(k, 1, 2)) / (self.layer_size ** 0.5)
+
+        scores = scores.masked_fill(self.mask[:, :, :T, :T] == 0, float('-inf'))[0]
+
+        weights = softmax(scores, dim=-1)
+
+        return matmul(weights, v)
