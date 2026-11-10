@@ -211,4 +211,43 @@ def Train_DigitConvolution(model, dataset):
     """
     Trains the model.
     """
-    """ YOUR CODE HERE """
+    learning_rate = 0.001
+    epochs = 10
+    batch_size = 64
+
+    dataloader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=True
+    )
+
+    optimizer = optim.Adam(
+        model.parameters(),
+        lr=learning_rate
+    )
+
+    model.train()
+
+    for epoch in range(epochs):
+        total_loss = 0
+
+        for batch in dataloader:
+            x = batch["x"]
+            y = batch["label"]
+
+            optimizer.zero_grad()
+
+            predictions = model(x)
+
+            loss = digitconvolution_Loss(predictions, y)
+
+            loss.backward()
+
+            optimizer.step()
+
+            total_loss += loss.item()
+
+        print(
+            f"Epoch [{epoch + 1}/{epochs}], "
+            f"Loss: {total_loss / len(dataloader):.4f}"
+        )

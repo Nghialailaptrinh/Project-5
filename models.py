@@ -84,6 +84,10 @@ class RegressionModel(Module):
     def __init__(self):
         # Initialize your model parameters here
         super().__init__()
+        self.linear1 = Linear(1, 64)
+        self.linear2 = Linear(64, 64)
+        self.linear3 = Linear(64, 1)
+        
 
         self.linear1 = Linear(1, 64)
         self.linear2 = Linear(64, 64)
@@ -129,19 +133,15 @@ class DigitClassificationModel(Module):
         self.linear3 = Linear(128, 10)
 
     def forward(self, x):
-        """
-        Runs the model for a batch of examples.
+        
+        hidden1 = relu(self.linear1(x))
+        hidden2 = relu(self.linear2(hidden1))
+        logits = self.linear3(hidden2)
 
-        Your model should predict a node with shape (batch_size x 10),
-        containing scores. Higher scores correspond to greater probability of
-        the image belonging to a particular class.
 
-        Inputs:
-            x: a tensor with shape (batch_size x 784)
-        Output:
-            A node with shape (batch_size x 10) containing predicted scores
-                (also called logits)
-        """
+
+
+
         hidden1 = relu(self.linear1(x))
         hidden2 = relu(self.linear2(hidden1))
         logits = self.linear3(hidden2)
@@ -151,11 +151,6 @@ class DigitClassificationModel(Module):
 
 class LanguageIDModel(Module):
     """
-    A model for language identification at a single-word granularity.
-
-    (See RegressionModel for more information about the APIs of different
-    methods here. We recommend that you implement the RegressionModel before
-    working on this part of the project.)
     """
 
     def __init__(self):
@@ -186,35 +181,8 @@ class LanguageIDModel(Module):
         )
 
     def forward(self, xs):
-        """
-        Runs the model for a batch of examples.
 
-        Although words have different lengths, our data processing guarantees
-        that within a single batch, all words will be of the same length (L).
 
-        Here `xs` will be a list of length L. Each element of `xs` will be a
-        tensor with shape (batch_size x self.num_chars), where every row in the
-        array is a one-hot vector encoding of a character. For example, if we
-        have a batch of 8 three-letter words where the last word is "cat", then
-        xs[1] will be a tensor that contains a 1 at position (7, 0). Here the
-        index 7 reflects the fact that "cat" is the last word in the batch, and
-        the index 0 reflects the fact that the letter "a" is the inital (0th)
-        letter of our combined alphabet for this task.
-
-        Your model should use a Recurrent Neural Network to summarize the list
-        `xs` into a single tensor of shape (batch_size x hidden_size), for your
-        choice of hidden_size. It should then calculate a tensor of shape
-        (batch_size x 5) containing scores, where higher scores correspond to
-        greater probability of the word originating from a particular language.
-
-        Inputs:
-            xs: a list with L elements (one per character), where each element
-                is a node with shape (batch_size x self.num_chars)
-        Returns:
-            A node with shape (batch_size x 5) containing predicted scores
-                (also called logits)
-        """
-        "*** YOUR CODE HERE ***"
         batch_size = xs[0].shape[0]
 
         hidden = zeros(batch_size, self.hidden_size)
@@ -245,24 +213,25 @@ def Convolve(input: tensor, weight: tensor):
     """
     input_tensor_dimensions = input.shape
     weight_dimensions = weight.shape
-    Output_Tensor = tensor(())
     "*** YOUR CODE HERE ***"
+
+    input_h, input_w = input_tensor_dimensions
+    weight_h, weight_w = weight_dimensions
+    out_h = input_h - weight_h + 1
+    out_w = input_w - weight_w + 1
+
+    Output_Tensor = zeros((out_h, out_w))
+    for i in range(out_h):
+        for j in range(out_w):
+            Output_Tensor[i, j] = tensordot(
+                input[i:i + weight_h, j:j + weight_w], weight, dims=2
+            )
 
     "*** End Code ***"
     return Output_Tensor
 
 
 class DigitConvolutionalModel(Module):
-    """
-    A model for handwritten digit classification using the MNIST dataset.
-
-    This class is a convolutational model which has already been trained on MNIST.
-    if Convolve() has been correctly implemented, this model should be able to achieve a high accuracy
-    on the mnist dataset given the pretrained weights.
-
-    Note that this class looks different from a standard pytorch model since we don't need to train it
-    as it will be run on preset weights.
-    """
 
     def __init__(self):
         # Initialize your model parameters here
@@ -271,6 +240,9 @@ class DigitConvolutionalModel(Module):
 
         self.convolution_weights = Parameter(ones((3, 3)))
         """ YOUR CODE HERE """
+        # After 3x3 convolution on 28x28 image → output 26x26 = 676 features
+        self.linear1 = Linear(676, 256)
+        self.linear2 = Linear(256, output_size)
 
     def forward(self, x):
         """
@@ -283,6 +255,8 @@ class DigitConvolutionalModel(Module):
         )
         x = x.flatten(start_dim=1)
         """ YOUR CODE HERE """
+        x = relu(self.linear1(x))
+        return self.linear2(x)
 
 
 class Attention(Module):
@@ -322,3 +296,22 @@ class Attention(Module):
         B, T, C = input.size()
 
         """YOUR CODE HERE"""
+
+        K = self.k_layer(input) 
+        Q = self.q_layer(input)  
+        V = self.v_layer(input)  
+
+
+
+        scale = self.layer_size ** 0.5
+        weights = matmul(Q, movedim(K, -1, -2)) / scale  
+
+  
+        weights = weights.masked_fill(self.mask[:, :, :T, :T] == 0, float('-inf'))[0]
+
+        weights = softmax(weights, dim=-1)  
+
+  
+        output = matmul(weights, V)
+
+        return output
