@@ -60,5 +60,5 @@ def digitconvolution_Loss(y_pred, y):
         y: a node with shape (batch_size x 10)
     Returns: a loss tensor
     """
-    """ YOUR CODE HERE """
+    return cross_entropy(y_pred, y).reshape(1)
     
