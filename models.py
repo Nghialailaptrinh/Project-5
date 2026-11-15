@@ -246,7 +246,16 @@ def Convolve(input: tensor, weight: tensor):
     input_tensor_dimensions = input.shape
     weight_dimensions = weight.shape
     Output_Tensor = tensor(())
-    "*** YOUR CODE HERE ***"
+    # Valid 2D cross-correlation, stride 1, no padding.
+    in_h, in_w = input_tensor_dimensions
+    k_h, k_w = weight_dimensions
+    out_h = in_h - k_h + 1
+    out_w = in_w - k_w + 1
+
+    Output_Tensor = zeros((out_h, out_w))
+    for i in range(k_h):
+        for j in range(k_w):
+            Output_Tensor = Output_Tensor + weight[i, j] * input[i:i + out_h, j:j + out_w]
 
     "*** End Code ***"
     return Output_Tensor
@@ -270,7 +279,8 @@ class DigitConvolutionalModel(Module):
         output_size = 10
 
         self.convolution_weights = Parameter(ones((3, 3)))
-        """ YOUR CODE HERE """
+        self.linear1 = Linear(26 * 26, 128)
+        self.linear2 = Linear(128, output_size)
 
     def forward(self, x):
         """
@@ -282,7 +292,8 @@ class DigitConvolutionalModel(Module):
             list(map(lambda sample: Convolve(sample, self.convolution_weights), x))
         )
         x = x.flatten(start_dim=1)
-        """ YOUR CODE HERE """
+        x = relu(self.linear1(x))
+        return self.linear2(x)
 
 
 class Attention(Module):
@@ -321,4 +332,11 @@ class Attention(Module):
         """
         B, T, C = input.size()
 
-        """YOUR CODE HERE"""
+        q = self.q_layer(input)
+        k = self.k_layer(input)
+        v = self.v_layer(input)
+
+        scores = matmul(q, movedim(k, 1, 2)) / (self.layer_size ** 0.5)
+        scores = scores.masked_fill(self.mask[:, :, :T, :T] == 0, float("-inf"))[0]
+        weights = softmax(scores, dim=-1)
+        return matmul(weights, v)
